@@ -418,6 +418,63 @@ header {
 .mistake-q { font-weight: 600; margin-bottom: 8px; font-size: 1.1rem; color: var(--dark); }
 .mistake-a { color: var(--success); font-weight: 800; }
 
+.whatsapp-share {
+    margin-top: 30px;
+    padding: 25px 15px 5px 15px;
+    border-top: 3px dashed #cbd5e1;
+    text-align: center;
+}
+
+.name-input {
+    width: 100%;
+    max-width: 380px;
+    padding: 14px 18px;
+    border-radius: 12px;
+    border: 2px solid #e2e8f0;
+    font-size: 1.1rem;
+    font-family: 'Poppins', sans-serif;
+    text-align: center;
+    box-shadow: 0 3px 0 #cbd5e1;
+    transition: border-color 0.2s;
+}
+
+.name-input:focus {
+    outline: none;
+    border-color: #25D366;
+}
+
+.send-warning {
+    display: none;
+    color: var(--danger);
+    font-weight: 700;
+    margin-top: 10px;
+    font-size: 0.95rem;
+}
+
+.send-warning.show { display: block; }
+
+.btn-whatsapp {
+    background: #25D366;
+    color: white;
+    border: none;
+    padding: 14px 28px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    font-weight: 700;
+    box-shadow: 0 5px 0 #128C3E;
+    transition: all 0.1s;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.btn-whatsapp:active {
+    transform: translateY(5px);
+    box-shadow: 0 0 0 #128C3E;
+}
+
 .main-footer {
     background-color: var(--dark);
     color: white;
@@ -538,6 +595,17 @@ header {
             <h2>Game Over!</h2>
             <h3 style="margin: 20px 0; font-size: 1.8rem; color: var(--primary);">Final Score: <span id="final-score"></span> / <span id="final-total"></span></h3>
             <div id="mistakes-container" class="results-list"></div>
+
+            <div class="whatsapp-share">
+                <h3 style="color: var(--dark); font-size: 1.3rem; margin-bottom: 5px;">Send Your Result to Mr Kareem</h3>
+                <p style="font-size: 0.95rem; margin-bottom: 15px;">Write your name then press the button</p>
+                <input type="text" id="student-name-input" class="name-input" placeholder="Enter your name here">
+                <div id="send-warning" class="send-warning">Please enter your name first!</div>
+                <button class="btn-whatsapp" onclick="sendResultToWhatsApp()">
+                    <i class="fab fa-whatsapp"></i> Send Result via WhatsApp
+                </button>
+            </div>
+
             <button class="btn-back" style="margin-top: 25px; padding: 15px 30px; background: var(--primary); box-shadow: 0 5px 0 #312e81; font-size: 1.2rem;" onclick="returnToMenu()">
                 <i class="fas fa-home"></i> Return to Main Menu
             </button>
@@ -621,6 +689,15 @@ header {
             });
         };
 
+        const TEACHER_WHATSAPP = "201271812647";
+        const GAME_NAMES = {
+            1: "Multiple Choice",
+            2: "Falling Bubbles",
+            3: "Target Practice",
+            4: "True or False",
+            5: "Advanced Challenge"
+        };
+
         let currentGameId = null;
         let currentQuestionIndex = 0;
         let score = 0;
@@ -659,6 +736,10 @@ header {
 
         function returnToMenu() {
             clearGameIntervals();
+            const nameInput = document.getElementById('student-name-input');
+            if (nameInput) nameInput.value = '';
+            const warningEl = document.getElementById('send-warning');
+            if (warningEl) warningEl.classList.remove('show');
             switchScreen('main-menu');
         }
 
@@ -682,6 +763,11 @@ header {
             score = 0;
             mistakes = [];
             clearGameIntervals();
+
+            const nameInput = document.getElementById('student-name-input');
+            if (nameInput) nameInput.value = '';
+            const warningEl = document.getElementById('send-warning');
+            if (warningEl) warningEl.classList.remove('show');
 
             const bank = (currentSection === 'grammar') ? GRAMMAR_BANK : VOCAB_BANK;
             totalQuestions = (currentSection === 'grammar') ? 25 : 30;
@@ -879,6 +965,33 @@ header {
                     mistakesContainer.appendChild(div);
                 });
             }
+        }
+
+        function sendResultToWhatsApp() {
+            const nameInput = document.getElementById('student-name-input');
+            const warningEl = document.getElementById('send-warning');
+            const studentName = nameInput.value.trim();
+
+            if (!studentName) {
+                warningEl.classList.add('show');
+                nameInput.focus();
+                return;
+            }
+            warningEl.classList.remove('show');
+
+            const sectionName = (currentSection === 'grammar') ? 'Grammar' : 'Vocabulary';
+            const gameName = GAME_NAMES[currentGameId] || '';
+
+            const message =
+                "📚 *New Game Result*\n" +
+                "👤 Student: " + studentName + "\n" +
+                "🏫 Unit " + UNIT_NUM + ": " + UNIT_NAME + "\n" +
+                "📝 Section: " + sectionName + "\n" +
+                "🎮 Game: " + gameName + "\n" +
+                "✅ Score: " + score + " / " + totalQuestions;
+
+            const url = "https://wa.me/" + TEACHER_WHATSAPP + "?text=" + encodeURIComponent(message);
+            window.open(url, "_blank");
         }
     </script>
 
